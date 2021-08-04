@@ -2,7 +2,8 @@
   "kind": "collectionType",
   "collectionName": "premium_plus_videos",
   "info": {
-    "name": "Premium Plus Video"
+    "name": "Premium Plus Video",
+    "description": ""
   },
   "options": {
     "increments": true,
@@ -19,6 +20,10 @@
       "type": "string",
       "unique": true,
       "required": true
+    },
+    "training_program": {
+      "model": "training-program",
+      "via": "premium_plus_videos"
     }
   }
 }
