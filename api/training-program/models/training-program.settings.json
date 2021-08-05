@@ -46,12 +46,8 @@
       "required": true
     },
     "premium_videos": {
-      "via": "training_program",
-      "collection": "premium-video"
-    },
-    "premium_plus_videos": {
-      "via": "training_program",
-      "collection": "premium-plus-video"
+      "collection": "premium-video",
+      "via": "training_program"
     }
   }
 }

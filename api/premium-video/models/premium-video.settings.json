@@ -22,8 +22,13 @@
       "unique": true
     },
     "training_program": {
-      "model": "training-program",
-      "via": "premium_videos"
+      "via": "premium_videos",
+      "model": "training-program"
+    },
+    "subscriptions": {
+      "via": "premium_videos",
+      "collection": "subscription",
+      "dominant": true
     }
   }
 }

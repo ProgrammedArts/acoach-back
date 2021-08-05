@@ -28,6 +28,10 @@
     },
     "stripePriceId": {
       "type": "string"
+    },
+    "premium_videos": {
+      "collection": "premium-video",
+      "via": "subscriptions"
     }
   }
 }
