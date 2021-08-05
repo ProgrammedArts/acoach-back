@@ -2,48 +2,48 @@
   "routes": [
     {
       "method": "GET",
-      "path": "/premium-plus-videos",
-      "handler": "premium-plus-video.find",
+      "path": "/training-programs",
+      "handler": "training-program.find",
       "config": {
         "policies": []
       }
     },
     {
       "method": "GET",
-      "path": "/premium-plus-videos/count",
-      "handler": "premium-plus-video.count",
+      "path": "/training-programs/count",
+      "handler": "training-program.count",
       "config": {
         "policies": []
       }
     },
     {
       "method": "GET",
-      "path": "/premium-plus-videos/:id",
-      "handler": "premium-plus-video.findOne",
+      "path": "/training-programs/:id",
+      "handler": "training-program.findOne",
       "config": {
         "policies": []
       }
     },
     {
       "method": "POST",
-      "path": "/premium-plus-videos",
-      "handler": "premium-plus-video.create",
+      "path": "/training-programs",
+      "handler": "training-program.create",
       "config": {
         "policies": []
       }
     },
     {
       "method": "PUT",
-      "path": "/premium-plus-videos/:id",
-      "handler": "premium-plus-video.update",
+      "path": "/training-programs/:id",
+      "handler": "training-program.update",
       "config": {
         "policies": []
       }
     },
     {
       "method": "DELETE",
-      "path": "/premium-plus-videos/:id",
-      "handler": "premium-plus-video.delete",
+      "path": "/training-programs/:id",
+      "handler": "training-program.delete",
       "config": {
         "policies": []
       }

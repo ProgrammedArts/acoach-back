@@ -1,0 +1,53 @@
+{
+  "kind": "collectionType",
+  "collectionName": "training_programs",
+  "info": {
+    "name": "Training Program",
+    "description": ""
+  },
+  "options": {
+    "increments": true,
+    "timestamps": true,
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "description": {
+      "type": "text"
+    },
+    "durationWeeks": {
+      "type": "integer",
+      "required": true
+    },
+    "difficulty": {
+      "type": "enumeration",
+      "enum": [
+        "Beginner",
+        "Intermediate",
+        "Difficult"
+      ],
+      "required": true
+    },
+    "goal": {
+      "type": "string",
+      "required": true
+    },
+    "category": {
+      "type": "enumeration",
+      "enum": [
+        "Train",
+        "Fun"
+      ],
+      "required": true
+    },
+    "premium_videos": {
+      "collection": "premium-video",
+      "via": "training_program"
+    }
+  }
+}

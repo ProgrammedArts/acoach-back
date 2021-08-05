@@ -20,6 +20,15 @@
       "type": "string",
       "required": true,
       "unique": true
+    },
+    "training_program": {
+      "via": "premium_videos",
+      "model": "training-program"
+    },
+    "subscriptions": {
+      "via": "premium_videos",
+      "collection": "subscription",
+      "dominant": true
     }
   }
 }
