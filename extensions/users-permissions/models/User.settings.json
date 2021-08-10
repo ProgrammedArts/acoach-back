@@ -62,6 +62,21 @@
     "realname": {
       "type": "string",
       "required": true
+    },
+    "stripeCustomerId": {
+      "type": "string"
+    },
+    "subscription": {
+      "model": "subscription"
+    },
+    "subscriptionStart": {
+      "type": "datetime"
+    },
+    "subscriptionEnd": {
+      "type": "datetime"
+    },
+    "subscriptionActive": {
+      "type": "boolean"
     }
   }
 }

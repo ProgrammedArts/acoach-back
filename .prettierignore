@@ -1,0 +1,6 @@
+.cache
+.husky
+.tmp
+build
+exports
+node_modules

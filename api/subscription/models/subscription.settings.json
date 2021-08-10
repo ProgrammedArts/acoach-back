@@ -16,18 +16,11 @@
       "type": "string",
       "required": true
     },
-    "price": {
-      "type": "integer"
-    },
-    "for": {
-      "type": "enumeration",
-      "enum": [
-        "Premium",
-        "PremiumPlus"
-      ]
-    },
-    "stripePriceId": {
+    "stripeProductId": {
       "type": "string"
+    },
+    "description": {
+      "type": "richtext"
     }
   }
 }

@@ -1,8 +1,9 @@
 {
   "kind": "collectionType",
-  "collectionName": "premium_plus_videos",
+  "collectionName": "starter_videos",
   "info": {
-    "name": "Premium Plus Video"
+    "name": "Starter Video",
+    "description": ""
   },
   "options": {
     "increments": true,
