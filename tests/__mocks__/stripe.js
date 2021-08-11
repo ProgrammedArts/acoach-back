@@ -177,6 +177,19 @@ const subscriptionBuilder = build('StripeSubscription')
     }
   })
 
+const customerPortalBuilder = build('StripeCustomerPortal').fields({
+  id: fake(() => `bps_${faker.random.alphaNumeric(20)}`),
+  object: 'billing_portal.session',
+  configuration: fake(() => `bpc_${faker.random.alphaNumeric(20)}`),
+  created: fake(() => Math.floor(new Date().getTime() / 1000)),
+  customer: fake(() => `cus_${faker.random.alphaNumeric(15)}`),
+  livemode: true,
+  locale: null,
+  on_behalf_of: null,
+  return_url: process.env.SITE_HOST,
+  url: fake(() => `https://billing.stripe.com/session/${faker.random.alphaNumeric(20)}`),
+})
+
 const createCustomer = jest.fn((overrides = {}) => Promise.resolve(customerBuilder(overrides)))
 
 const priceCreate = jest.fn((overrides = {}) => priceBuilder(overrides))
@@ -190,6 +203,10 @@ const createCheckoutSession = jest.fn((overrides = {}) =>
 const webHookConstructEvent = jest.fn()
 
 const retrieveSubscription = jest.fn((overrides = {}) => subscriptionBuilder(overrides))
+
+const createCustomerPortal = jest.fn((overrides = {}) =>
+  Promise.resolve(customerPortalBuilder(overrides))
+)
 
 module.exports = jest.fn(() => {
   const stripeModule = {
@@ -211,6 +228,11 @@ module.exports = jest.fn(() => {
     webhooks: {
       constructEvent: webHookConstructEvent,
     },
+    billingPortal: {
+      sessions: {
+        create: createCustomerPortal,
+      },
+    },
   }
 
   return stripeModule
@@ -222,4 +244,5 @@ module.exports.builders = {
   customer: customerBuilder,
   session: sessionBuilder,
   price: priceBuilder,
+  customerPortal: customerPortalBuilder,
 }

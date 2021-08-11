@@ -7,17 +7,44 @@ module.exports = {
       url: String
     }
 
+    type CustomerPortal {
+      url: String
+    }
+
     input CreateCheckoutInput {
       subscriptionId: ID!
     }
   `,
-  query: ``,
+  query: `
+    getCustomerPortal: CustomerPortal
+  `,
   mutation: `
     createCheckout(input: CreateCheckoutInput): CheckoutSession
   `,
   type: {},
   resolver: {
-    Query: {},
+    Query: {
+      getCustomerPortal: {
+        description: 'Gets the URL to the customer portal',
+        resolverOf: 'application::subscription.subscription.create',
+        resolver: async (_obj, _params, { context }) => {
+          const { user } = context.state
+
+          if (user?.stripeCustomerId) {
+            const portalSession = await stripe.billingPortal.sessions.create({
+              customer: user.stripeCustomerId,
+              return_url: `${process.env.SITE_HOST}`,
+            })
+
+            return {
+              url: portalSession.url,
+            }
+          }
+
+          throw new Error(`User does not have a Stripe customer id ${user.id}`)
+        },
+      },
+    },
     Mutation: {
       createCheckout: {
         description: 'Creates a checkout session',
@@ -75,7 +102,7 @@ module.exports = {
             }
           }
 
-          return {}
+          throw new Error(`Subscription not found (${subscriptionId})`)
         },
       },
     },
