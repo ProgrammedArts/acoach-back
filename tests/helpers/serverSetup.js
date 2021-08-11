@@ -2,7 +2,7 @@ module.exports = async () => {
   // setup user permissions
   await strapi.plugins['users-permissions'].services.userspermissions.updatePermissions()
 
-  // users can create subscriptions (necessary for checkout)
+  // authenticated users can create subscriptions (necessary for checkout)
   const [subscriptionCreatePermission] = await strapi
     .query('permission', 'users-permissions')
     .find({
@@ -25,4 +25,26 @@ module.exports = async () => {
   await strapi
     .query('permission', 'users-permissions')
     .update({ id: subscriptionFindPermission.id }, { enabled: true })
+
+  // authenticated users can browse workout-videos
+  const [workoutVideoFindPermission] = await strapi.query('permission', 'users-permissions').find({
+    type: 'application',
+    controller: 'workout-video',
+    action: 'find',
+    role: 1,
+  })
+  await strapi
+    .query('permission', 'users-permissions')
+    .update({ id: workoutVideoFindPermission.id }, { enabled: true })
+  const [workoutVideoFindOnePermission] = await strapi
+    .query('permission', 'users-permissions')
+    .find({
+      type: 'application',
+      controller: 'workout-video',
+      action: 'findone',
+      role: 1,
+    })
+  await strapi
+    .query('permission', 'users-permissions')
+    .update({ id: workoutVideoFindOnePermission.id }, { enabled: true })
 }

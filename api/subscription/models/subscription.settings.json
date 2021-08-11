@@ -21,6 +21,10 @@
     },
     "description": {
       "type": "richtext"
+    },
+    "fullAccess": {
+      "type": "boolean",
+      "default": false
     }
   }
 }

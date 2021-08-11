@@ -33,7 +33,8 @@ it('strapi is defined', () => {
   expect(strapi).toBeDefined()
 })
 
-require('./user')
-require('./stripe')
-require('./subscription')
-require('./webhook')
+// require('./user')
+// require('./stripe')
+// require('./subscription')
+// require('./webhook')
+require('./workoutVideos')
