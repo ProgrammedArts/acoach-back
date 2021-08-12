@@ -204,4 +204,54 @@ describe('Webhook', () => {
     expect(userWithSub.subscription).toMatchObject(subscription)
     expect(userWithSub.subscriptionActive).toBeFalsy()
   })
+
+  it('Revokes subscription access if the subscription has been immediately terminated', async () => {
+    const stripeCustomer = stripe.builders.customer()
+    const user = await createUser({ stripeCustomerId: stripeCustomer.id })
+    const subscriptionItem = stripe.builders.subscriptionItem()
+    const product = subscriptionItem.price.product
+    const subscription = await createSubscription({ stripeProductId: product })
+    const stripeSubscription = stripe.builders.subscription({
+      items: {
+        object: 'list',
+        data: [subscriptionItem],
+        has_more: false,
+        url: `/v1/subscription_items?subscription=${subscriptionItem.subscription}`,
+      },
+    })
+
+    // stripe mocks
+    const {
+      subscriptions: { retrieve },
+      webhooks: { constructEvent },
+    } = stripe()
+    retrieve.mockImplementationOnce(() => Promise.resolve(stripeSubscription))
+    constructEvent.mockReturnValueOnce({
+      data: { object: { customer: stripeCustomer.id } },
+      type: 'invoice.paid',
+    })
+
+    // activate subscription
+    await request.agent(strapi.server).post('/webhook').send({}).expect(200)
+
+    // terminate subscrpition
+    constructEvent.mockReturnValueOnce({
+      data: { object: { customer: stripeCustomer.id } },
+      type: 'customer.subscription.deleted',
+    })
+    await request.agent(strapi.server).post('/webhook').send({}).expect(200)
+
+    // verify that user has its subscription disabled
+    const userWithSub = await strapi.plugins['users-permissions'].services.user.fetch({
+      id: user.id,
+    })
+    expect(userWithSub.subscriptionStart).toEqual(
+      new Date(stripeSubscription.current_period_start * 1000).toISOString()
+    )
+    expect(userWithSub.subscriptionEnd).toEqual(
+      new Date(stripeSubscription.current_period_end * 1000).toISOString()
+    )
+    expect(userWithSub.subscription).toMatchObject(subscription)
+    expect(userWithSub.subscriptionActive).toBeFalsy()
+  })
 })

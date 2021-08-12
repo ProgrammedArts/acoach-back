@@ -88,6 +88,8 @@ module.exports = {
           }
           break
 
+        case 'customer.subscription.deleted':
+        // revoke subscription access if a subscription has been immediately terminated
         case 'invoice.payment_failed':
           // revoke subscription access
           user = (
