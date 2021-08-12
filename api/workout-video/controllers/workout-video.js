@@ -1,6 +1,6 @@
 'use strict'
 const { sanitizeEntity } = require('strapi-utils')
-const isSubscriptionActive = require('../../../helpers/isSubscriptionActive')
+const hasActiveSubscription = require('../../../helpers/hasActiveSubscription')
 
 /**
  * Read the documentation (https://strapi.io/documentation/developer-docs/latest/development/backend-customization.html#core-controllers)
@@ -15,7 +15,7 @@ module.exports = {
       const query = {
         ...ctx.query,
       }
-      if (isSubscriptionActive(ctx.state.user)) {
+      if (hasActiveSubscription(ctx.state.user)) {
         const subscription = await strapi.services.subscription.findOne({
           id: ctx.state.user.subscription,
         })
@@ -46,7 +46,7 @@ module.exports = {
       const query = {
         id,
       }
-      if (isSubscriptionActive(ctx.state.user)) {
+      if (hasActiveSubscription(ctx.state.user)) {
         const subscription = await strapi.services.subscription.findOne({
           id: ctx.state.user.subscription,
         })
@@ -69,7 +69,7 @@ module.exports = {
       const query = {
         ...ctx.query,
       }
-      if (isSubscriptionActive(ctx.state.user)) {
+      if (hasActiveSubscription(ctx.state.user)) {
         const subscription = await strapi.services.subscription.findOne({
           id: ctx.state.user.subscription,
         })
