@@ -152,6 +152,75 @@ describe('Stripe extension', () => {
       }
       expect(error.response?.errors[0]?.message).toEqual('Forbidden')
     })
+
+    it('Errors if price is not found on Stripe', async () => {
+      const subscription = await createSubscription()
+      const end = new Date()
+      end.setDate(end.getDate() + 1)
+      const user = await createUser({
+        subscriptionEnd: end,
+        subscriptionActive: true,
+        subscription: subscription.id,
+      })
+      const jwt = getJwt(user.id)
+      const {
+        prices: { list },
+        checkout: {
+          sessions: { create: sessionCreate },
+        },
+      } = stripe()
+
+      list.mockResolvedValueOnce({ data: [] })
+
+      const graphQLClient = new GraphQLClient(endPoint, {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+        },
+      })
+
+      let error
+      try {
+        await graphQLClient.request(FIND_CUSTOMER, {
+          subscriptionId: subscription.id,
+        })
+      } catch (e) {
+        error = e
+      }
+      expect(error.response?.errors[0]?.message).toContain('already has an active subscription')
+      expect(list).not.toHaveBeenCalled()
+      expect(sessionCreate).not.toHaveBeenCalled()
+    })
+
+    it('Errors if user already has an active subscription', async () => {
+      const user = await createUser()
+      const jwt = getJwt(user.id)
+      const subscription = await createSubscription()
+      const {
+        prices: { list },
+        checkout: {
+          sessions: { create: sessionCreate },
+        },
+      } = stripe()
+
+      list.mockResolvedValueOnce({ data: [] })
+
+      const graphQLClient = new GraphQLClient(endPoint, {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+        },
+      })
+
+      let error
+      try {
+        await graphQLClient.request(FIND_CUSTOMER, {
+          subscriptionId: subscription.id,
+        })
+      } catch (e) {
+        error = e
+      }
+      expect(error.response?.errors[0]?.message).toContain('No Stripe product or price for ')
+      expect(sessionCreate).not.toHaveBeenCalled()
+    })
   })
 
   describe('Stripe customer portal', () => {
