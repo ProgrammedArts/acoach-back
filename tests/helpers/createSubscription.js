@@ -5,6 +5,7 @@ const subscriptionBuilder = build('Subscription').fields({
   name: fake(() => faker.name.findName()),
   stripeProductId: fake(() => `prod_${faker.random.alphaNumeric(15)}`),
   description: fake(() => faker.lorem.sentence()),
+  fullAccess: false,
 })
 
 module.exports = async (overrides = {}, options = { save: true }) => {
@@ -13,7 +14,7 @@ module.exports = async (overrides = {}, options = { save: true }) => {
   if (options.save) {
     return await strapi.services.subscription.create(subscription)
   }
-  return Promise.resolve()
+  return Promise.resolve(subscription)
 }
 
 module.exports.builder = subscriptionBuilder

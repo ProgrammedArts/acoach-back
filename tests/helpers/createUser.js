@@ -13,6 +13,7 @@ const userBuilder = build('User')
     subscriptionStart: null,
     subscriptionEnd: null,
     subscriptionActive: null,
+    subscription: null,
   })
   .map((user) => ({
     ...user,
@@ -32,7 +33,7 @@ module.exports = async (overrides = {}, options = { save: true }) => {
   if (options.save) {
     return await strapi.plugins['users-permissions'].services.user.add(user)
   }
-  return Promise.resolve()
+  return Promise.resolve(user)
 }
 
 module.exports.builder = userBuilder

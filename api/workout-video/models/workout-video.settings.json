@@ -1,9 +1,8 @@
 {
   "kind": "collectionType",
-  "collectionName": "premium_videos",
+  "collectionName": "workout_videos",
   "info": {
-    "name": "Premium Video",
-    "description": ""
+    "name": "Workout Video"
   },
   "options": {
     "increments": true,
@@ -18,8 +17,10 @@
     },
     "code": {
       "type": "string",
-      "required": true,
-      "unique": true
+      "required": true
+    },
+    "subscription": {
+      "model": "subscription"
     }
   }
 }

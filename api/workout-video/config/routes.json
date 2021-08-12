@@ -2,48 +2,48 @@
   "routes": [
     {
       "method": "GET",
-      "path": "/premium-plus-videos",
-      "handler": "premium-plus-video.find",
+      "path": "/workout-videos",
+      "handler": "workout-video.find",
       "config": {
         "policies": []
       }
     },
     {
       "method": "GET",
-      "path": "/premium-plus-videos/count",
-      "handler": "premium-plus-video.count",
+      "path": "/workout-videos/count",
+      "handler": "workout-video.count",
       "config": {
         "policies": []
       }
     },
     {
       "method": "GET",
-      "path": "/premium-plus-videos/:id",
-      "handler": "premium-plus-video.findOne",
+      "path": "/workout-videos/:id",
+      "handler": "workout-video.findOne",
       "config": {
         "policies": []
       }
     },
     {
       "method": "POST",
-      "path": "/premium-plus-videos",
-      "handler": "premium-plus-video.create",
+      "path": "/workout-videos",
+      "handler": "workout-video.create",
       "config": {
         "policies": []
       }
     },
     {
       "method": "PUT",
-      "path": "/premium-plus-videos/:id",
-      "handler": "premium-plus-video.update",
+      "path": "/workout-videos/:id",
+      "handler": "workout-video.update",
       "config": {
         "policies": []
       }
     },
     {
       "method": "DELETE",
-      "path": "/premium-plus-videos/:id",
-      "handler": "premium-plus-video.delete",
+      "path": "/workout-videos/:id",
+      "handler": "workout-video.delete",
       "config": {
         "policies": []
       }
