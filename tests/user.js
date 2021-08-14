@@ -63,6 +63,62 @@ describe('User extension', () => {
     })
   })
 
+  it('Registration fails if password is not long enough', async () => {
+    const email = faker.internet.email().toLowerCase()
+    const name = faker.name.firstName()
+    const password = faker.internet.password(3)
+
+    const graphQLClient = new GraphQLClient(endPoint)
+
+    let error
+    try {
+      await graphQLClient.request(SIGN_UP, {
+        username: email,
+        email,
+        realname: name,
+        password,
+      })
+    } catch (e) {
+      error = e
+    }
+    const strapiError = error.response?.errors[0].extensions.exception.data.message[0].messages[0]
+    expect(strapiError.id).toEqual('password.invalid')
+    expect(strapiError.message).toContain(
+      'Password must contain at least 1 number and must be 8 characters long'
+    )
+
+    const [user] = await strapi.plugins['users-permissions'].services.user.fetchAll({ email })
+    expect(user).not.toBeDefined()
+  })
+
+  it('Registration fails if password does not have a number', async () => {
+    const email = faker.internet.email().toLowerCase()
+    const name = faker.name.firstName()
+    const password = faker.random.alpha(10)
+
+    const graphQLClient = new GraphQLClient(endPoint)
+
+    let error
+    try {
+      await graphQLClient.request(SIGN_UP, {
+        username: email,
+        email,
+        realname: name,
+        password,
+      })
+    } catch (e) {
+      error = e
+    }
+    const strapiError = error.response?.errors[0].extensions.exception.data.message[0].messages[0]
+    expect(strapiError.id).toEqual('password.invalid')
+    expect(strapiError.message).toContain(
+      'Password must contain at least 1 number and must be 8 characters long'
+    )
+
+    const [user] = await strapi.plugins['users-permissions'].services.user.fetchAll({ email })
+    expect(user).not.toBeDefined()
+  })
+
   it('Sends an email confirmation', async () => {
     const user = await createUser()
     const mockSendEmailConfirmation = jest

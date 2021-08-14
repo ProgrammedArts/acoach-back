@@ -1,4 +1,5 @@
 const _ = require('lodash')
+const isStrongPassword = require('validator/lib/isStrongPassword')
 const checkBadRequest = require('../../../helpers/checkBadRequest')
 const throwGraphQLError = require('../../../helpers/throwGraphQLError')
 
@@ -38,6 +39,24 @@ module.exports = {
         resolverOf: 'plugins::users-permissions.auth.register',
         resolver: async (_obj, options, { context }) => {
           context.request.body = _.toPlainObject(options.input)
+
+          // validate password
+          if (
+            !isStrongPassword(options.input.password, {
+              minLength: 8,
+              minLowercase: 0,
+              minUppercase: 0,
+              minNumbers: 1,
+              minSymbols: 0,
+              returnScore: false,
+            })
+          ) {
+            throwGraphQLError(
+              'password.invalid',
+              'Password must contain at least 1 number and must be 8 characters long',
+              context
+            )
+          }
 
           await strapi.plugins['users-permissions'].controllers.auth.register(context)
           const output = context.body.toJSON ? context.body.toJSON() : context.body
