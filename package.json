@@ -1,8 +1,8 @@
 {
-  "name": "acoaching-back-2",
+  "name": "acoach-back",
   "private": true,
   "version": "0.1.0",
-  "description": "A Strapi application",
+  "description": "ACoach back-end made with Strapi",
   "scripts": {
     "develop": "strapi develop",
     "start": "strapi start",
@@ -27,7 +27,8 @@
     "strapi-plugin-users-permissions": "3.6.5",
     "strapi-provider-email-sendgrid": "^3.6.6",
     "strapi-utils": "3.6.5",
-    "stripe": "^8.165.0"
+    "stripe": "^8.165.0",
+    "validator": "^13.6.0"
   },
   "devDependencies": {
     "eslint-config-prettier": "^8.3.0",
