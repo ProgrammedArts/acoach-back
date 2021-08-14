@@ -1,6 +1,7 @@
 'use strict'
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
 const hasActiveSubscription = require('../../../helpers/hasActiveSubscription')
+const throwGraphQLError = require('../../../helpers/throwGraphQLError')
 
 module.exports = {
   definition: `
@@ -42,7 +43,11 @@ module.exports = {
             }
           }
 
-          throw new Error(`User does not have a Stripe customer id ${user.id}`)
+          throwGraphQLError(
+            'Stripe.user.not.found',
+            `User does not have a Stripe customer id ${user.id}`,
+            context
+          )
         },
       },
     },
@@ -77,7 +82,11 @@ module.exports = {
             }
 
             if (hasActiveSubscription(user)) {
-              throw new Error(`User ${user.email} already has an active subscription`)
+              throwGraphQLError(
+                'Stripe.user.already.subscribed',
+                `User ${user.email} already has an active subscription`,
+                context
+              )
             }
 
             const [price] = (
@@ -107,10 +116,18 @@ module.exports = {
                 url: session.url,
               }
             }
-            throw new Error(`No Stripe product or price for ${subscription.stripeProductId}`)
+            throwGraphQLError(
+              'Stripe.product.not.found',
+              `No Stripe product or price for ${subscription.stripeProductId}`,
+              context
+            )
           }
 
-          throw new Error(`Subscription not found (${subscriptionId})`)
+          throwGraphQLError(
+            'Stripe.subscription.not.found',
+            `Subscription not found (${subscriptionId})`,
+            context
+          )
         },
       },
     },

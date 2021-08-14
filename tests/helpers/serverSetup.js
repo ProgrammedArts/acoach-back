@@ -47,4 +47,17 @@ module.exports = async () => {
   await strapi
     .query('permission', 'users-permissions')
     .update({ id: workoutVideoFindOnePermission.id }, { enabled: true })
+
+  // anonymous users can request the confirmation email
+  const [sendEmailConfirmationPermission] = await strapi
+    .query('permission', 'users-permissions')
+    .find({
+      type: 'users-permissions',
+      controller: 'auth',
+      action: 'sendemailconfirmation',
+      role: 2,
+    })
+  await strapi
+    .query('permission', 'users-permissions')
+    .update({ id: sendEmailConfirmationPermission.id }, { enabled: true })
 }

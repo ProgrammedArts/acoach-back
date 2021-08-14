@@ -1,19 +1,6 @@
 const _ = require('lodash')
-
-/**
- * Throws an ApolloError if context body contains a bad request
- * @param contextBody - body of the context object given to the resolver
- * @throws ApolloError if the body is a bad request
- */
-function checkBadRequest(contextBody) {
-  if (_.get(contextBody, 'statusCode', 200) !== 200) {
-    const message = _.get(contextBody, 'error', 'Bad Request')
-    const exception = new Error(message)
-    exception.code = _.get(contextBody, 'statusCode', 400)
-    exception.data = contextBody
-    throw exception
-  }
-}
+const checkBadRequest = require('../../../helpers/checkBadRequest')
+const throwGraphQLError = require('../../../helpers/throwGraphQLError')
 
 module.exports = {
   definition: `
@@ -27,10 +14,20 @@ module.exports = {
     extend type UsersPermissionsMe {
       realname: String!
     }
+
+    input SendEmailConfirmationInput {
+      email: String!
+    }
+
+    type SendEmailConfirmationResult {
+      email: String!
+      sent: Boolean!
+    }
   `,
   query: ``,
   mutation: `
     registerWithRealName(input: UsersPermissionsWithRealNameRegisterInput!): UsersPermissionsLoginPayload!
+    sendEmailConfirmation(input: SendEmailConfirmationInput!): SendEmailConfirmationResult!
   `,
   type: {},
   resolver: {
@@ -43,12 +40,40 @@ module.exports = {
           context.request.body = _.toPlainObject(options.input)
 
           await strapi.plugins['users-permissions'].controllers.auth.register(context)
-          let output = context.body.toJSON ? context.body.toJSON() : context.body
+          const output = context.body.toJSON ? context.body.toJSON() : context.body
 
           checkBadRequest(output)
           return {
             user: output.user || output,
             jwt: output.jwt,
+          }
+        },
+      },
+      sendEmailConfirmation: {
+        description: 'Sends email confirmation',
+        resolverOf: 'plugins::users-permissions.auth.sendEmailConfirmation',
+        resolver: async (_obj, options, { context }) => {
+          context.request.body = _.toPlainObject(options.input)
+
+          // check if user exists first
+          const [user] = await strapi.plugins['users-permissions'].services.user.fetchAll({
+            email: options.input.email,
+          })
+          if (!user) {
+            throwGraphQLError(
+              'user.not.found',
+              `User cannot be found with email ${options.input.email}`,
+              context
+            )
+          }
+
+          await strapi.plugins['users-permissions'].controllers.auth.sendEmailConfirmation(context)
+          const output = context.body.toJSON ? context.body.toJSON() : context.body
+
+          checkBadRequest(output)
+          return {
+            email: output.email,
+            sent: true,
           }
         },
       },

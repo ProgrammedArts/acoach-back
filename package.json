@@ -25,6 +25,7 @@
     "strapi-plugin-i18n": "3.6.5",
     "strapi-plugin-upload": "3.6.5",
     "strapi-plugin-users-permissions": "3.6.5",
+    "strapi-provider-email-sendgrid": "^3.6.6",
     "strapi-utils": "3.6.5",
     "stripe": "^8.165.0"
   },

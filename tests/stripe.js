@@ -123,7 +123,9 @@ describe('Stripe extension', () => {
       } catch (e) {
         error = e
       }
-      expect(error.response?.errors[0]?.message).toContain('Subscription not found')
+      const strapiError = error.response?.errors[0].extensions.exception.data.message[0].messages[0]
+      expect(strapiError.id).toEqual('Stripe.subscription.not.found')
+      expect(strapiError.message).toContain('Subscription not found')
 
       const {
         customers: { create: customerCreate },
@@ -186,7 +188,9 @@ describe('Stripe extension', () => {
       } catch (e) {
         error = e
       }
-      expect(error.response?.errors[0]?.message).toContain('already has an active subscription')
+      const strapiError = error.response?.errors[0].extensions.exception.data.message[0].messages[0]
+      expect(strapiError.id).toEqual('Stripe.user.already.subscribed')
+      expect(strapiError.message).toContain('already has an active subscription')
       expect(list).not.toHaveBeenCalled()
       expect(sessionCreate).not.toHaveBeenCalled()
     })
@@ -218,7 +222,9 @@ describe('Stripe extension', () => {
       } catch (e) {
         error = e
       }
-      expect(error.response?.errors[0]?.message).toContain('No Stripe product or price for ')
+      const strapiError = error.response?.errors[0].extensions.exception.data.message[0].messages[0]
+      expect(strapiError.id).toEqual('Stripe.product.not.found')
+      expect(strapiError.message).toContain('No Stripe product or price for ')
       expect(sessionCreate).not.toHaveBeenCalled()
     })
   })
@@ -251,10 +257,9 @@ describe('Stripe extension', () => {
       } catch (e) {
         error = e
       }
-      expect(error.response?.errors[0]?.message).toContain(
-        'User does not have a Stripe customer id'
-      )
-
+      const strapiError = error.response?.errors[0].extensions.exception.data.message[0].messages[0]
+      expect(strapiError.id).toEqual('Stripe.user.not.found')
+      expect(strapiError.message).toContain('User does not have a Stripe customer id')
       expect(stripe().billingPortal.sessions.create).not.toHaveBeenCalled()
     })
 
