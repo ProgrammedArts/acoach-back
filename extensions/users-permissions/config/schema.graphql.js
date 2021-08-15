@@ -14,6 +14,9 @@ module.exports = {
 
     extend type UsersPermissionsMe {
       realname: String!
+      subscription: Subscription
+      subscriptionEnd: DateTime
+      subscriptionActive: Boolean
     }
 
     input SendEmailConfirmationInput {
@@ -24,15 +27,40 @@ module.exports = {
       email: String!
       sent: Boolean!
     }
+
+    input ChangePasswordInput {
+      password: String!
+      newPassword: String!
+    }
   `,
-  query: ``,
+  query: `
+    
+  `,
   mutation: `
     registerWithRealName(input: UsersPermissionsWithRealNameRegisterInput!): UsersPermissionsLoginPayload!
     sendEmailConfirmation(input: SendEmailConfirmationInput!): SendEmailConfirmationResult!
+    changePassword(input: ChangePasswordInput!): UsersPermissionsMe
   `,
   type: {},
   resolver: {
-    Query: {},
+    Query: {
+      me: {
+        resolverOf: 'plugins::users-permissions.user.me',
+        resolver: async (_obj, _options, { context }) => {
+          if (!context.state.user) {
+            return context.badRequest(null, [
+              { messages: [{ id: 'No authorization header was found' }] },
+            ])
+          }
+
+          const user = await strapi.plugins['users-permissions'].services.user.fetch(
+            context.state.user.id
+          )
+
+          return user
+        },
+      },
+    },
     Mutation: {
       registerWithRealName: {
         description: 'Register a user',
@@ -94,6 +122,58 @@ module.exports = {
             email: output.email,
             sent: true,
           }
+        },
+      },
+      changePassword: {
+        description: 'Changes password without email',
+        resolverOf: 'application::authenticated.authenticated.isAuthenticated',
+        resolver: async (_obj, options, { context }) => {
+          const { password, newPassword } = options.input
+
+          // validate user
+          const user = await strapi.plugins['users-permissions'].services.user.fetch(
+            context.state.user.id
+          )
+
+          if (!user) {
+            throwGraphQLError('user.not.found', 'By some miracle the user does not exist', context)
+          }
+          const currentPasswordValidated = await strapi.plugins[
+            'users-permissions'
+          ].services.user.validatePassword(password, user.password)
+
+          if (!currentPasswordValidated) {
+            throwGraphQLError('current.password.invalid', 'Current password is invalid', context)
+          }
+
+          // validate password
+          if (
+            !isStrongPassword(options.input.newPassword, {
+              minLength: 8,
+              minLowercase: 0,
+              minUppercase: 0,
+              minNumbers: 1,
+              minSymbols: 0,
+              returnScore: false,
+            })
+          ) {
+            throwGraphQLError(
+              'password.invalid',
+              'Password must contain at least 1 number and must be 8 characters long',
+              context
+            )
+          }
+
+          const hashedNewPassword = await strapi.plugins[
+            'users-permissions'
+          ].services.user.hashPassword({
+            password: newPassword,
+          })
+
+          // update the user
+          return await strapi
+            .query('user', 'users-permissions')
+            .update({ id: user.id }, { resetPasswordToken: null, password: hashedNewPassword })
         },
       },
     },

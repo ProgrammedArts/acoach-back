@@ -1,0 +1,18 @@
+{
+  "kind": "singleType",
+  "collectionName": "authenticateds",
+  "info": {
+    "name": "authenticated"
+  },
+  "options": {
+    "increments": true,
+    "timestamps": true,
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "isAuthenticated": {
+      "type": "boolean"
+    }
+  }
+}
