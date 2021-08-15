@@ -12,16 +12,14 @@ module.exports = {
     let entities = []
 
     if (ctx.state.user) {
+      const user = await strapi.plugins['users-permissions'].services.user.fetch(ctx.state.user.id)
+
       const query = {
         ...ctx.query,
       }
-      if (hasActiveSubscription(ctx.state.user)) {
-        const subscription = await strapi.services.subscription.findOne({
-          id: ctx.state.user.subscription,
-        })
-
-        if (!subscription.fullAccess) {
-          query.subscription = subscription.id
+      if (hasActiveSubscription(user)) {
+        if (!user.subscription.fullAccess) {
+          query.subscription = user.subscription.id
         }
       } else {
         query.subscription_in = []
@@ -43,16 +41,14 @@ module.exports = {
     const { id } = ctx.params
 
     if (ctx.state.user) {
+      const user = await strapi.plugins['users-permissions'].services.user.fetch(ctx.state.user.id)
+
       const query = {
         id,
       }
-      if (hasActiveSubscription(ctx.state.user)) {
-        const subscription = await strapi.services.subscription.findOne({
-          id: ctx.state.user.subscription,
-        })
-
-        if (!subscription.fullAccess) {
-          query.subscription = subscription.id
+      if (hasActiveSubscription(user)) {
+        if (!user.subscription.fullAccess) {
+          query.subscription = user.subscription.id
         }
       } else {
         query.subscription_in = []
@@ -66,16 +62,14 @@ module.exports = {
 
   async count(ctx) {
     if (ctx.state.user) {
+      const user = await strapi.plugins['users-permissions'].services.user.fetch(ctx.state.user.id)
+
       const query = {
         ...ctx.query,
       }
-      if (hasActiveSubscription(ctx.state.user)) {
-        const subscription = await strapi.services.subscription.findOne({
-          id: ctx.state.user.subscription,
-        })
-
-        if (!subscription.fullAccess) {
-          query.subscription = subscription.id
+      if (hasActiveSubscription(user)) {
+        if (!user.subscription.fullAccess) {
+          query.subscription = user.subscription.id
         }
       } else {
         query.subscription_in = []

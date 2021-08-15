@@ -2,7 +2,8 @@
   "kind": "collectionType",
   "collectionName": "workout_videos",
   "info": {
-    "name": "Workout Video"
+    "name": "Workout Video",
+    "description": ""
   },
   "options": {
     "increments": true,
@@ -21,6 +22,9 @@
     },
     "subscription": {
       "model": "subscription"
+    },
+    "thumbnailURL": {
+      "type": "string"
     }
   }
 }
