@@ -8,5 +8,11 @@ module.exports = {
       multipart: true,
       includeUnparsed: true,
     },
+    gzip: {
+      enabled: true,
+      options: {
+        br: false,
+      },
+    },
   },
 }
