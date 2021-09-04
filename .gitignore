@@ -115,3 +115,7 @@ build
 
 # DAWG
 .husky
+
+# Heroku
+package-lock.json
+.env.production

@@ -9,11 +9,15 @@
     "build": "strapi build",
     "strapi": "strapi",
     "test": "jest --forceExit --detectOpenHandles",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "production": "cross-env NODE_ENV=production npm run build"
   },
   "dependencies": {
+    "cross-env": "^7.0.3",
     "knex": "0.21.18",
     "lodash": "^4.17.21",
+    "pg": "^8.7.1",
+    "pg-connection-string": "^2.5.0",
     "sqlite3": "^5.0.2",
     "strapi": "3.6.5",
     "strapi-admin": "3.6.5",
