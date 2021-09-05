@@ -4,6 +4,20 @@ const createUser = require('./helpers/createUser')
 const getJwt = require('./helpers/getJwt')
 const { GraphQLClient, gql } = require('graphql-request')
 const getPort = require('get-port')
+const faker = require('faker/locale/fr')
+const { setupServer } = require('msw/node')
+const { rest } = require('msw')
+
+const server = setupServer(
+  rest.post(`https://dev.vdocipher.com/api/videos/:code/otp`, (req, res, ctx) =>
+    res(
+      ctx.json({
+        otp: faker.random.alphaNumeric(10),
+        playbackInfo: faker.random.alphaNumeric(10),
+      })
+    )
+  )
+)
 
 const GET_VIDEOS = gql`
   {
@@ -21,6 +35,8 @@ const GET_VIDEO_BY_CODE = gql`
       id
       title
       code
+      otp
+      playbackInfo
     }
   }
 `
@@ -32,6 +48,7 @@ describe('Workout video model', () => {
   let premiumSubscription
   let port
   let endPoint
+
   beforeAll(async () => {
     port = await getPort()
     strapi.server.listen(port)
@@ -41,10 +58,15 @@ describe('Workout video model', () => {
     premiumSubscription = await createSubscription({ fullAccess: true })
     starterVideo = await createWorkoutVideo({ subscription: starterSubscription })
     premiumVideo = await createWorkoutVideo({ subscription: premiumSubscription })
+
+    server.listen({
+      onUnhandledRequest: 'bypass',
+    })
   })
 
   afterAll(() => {
     strapi.server.close()
+    server.close()
   })
 
   describe('find', () => {
@@ -294,6 +316,8 @@ describe('Workout video model', () => {
         title: starterVideo.title,
         code: starterVideo.code,
       })
+      expect(workoutVideo.otp).toBeTruthy()
+      expect(workoutVideo.playbackInfo).toBeTruthy()
     })
 
     it('Gets premium video if user is authenticated and has an active premium subscription', async () => {
@@ -320,6 +344,8 @@ describe('Workout video model', () => {
         title: premiumVideo.title,
         code: premiumVideo.code,
       })
+      expect(workoutVideo.otp).toBeTruthy()
+      expect(workoutVideo.playbackInfo).toBeTruthy()
     })
   })
 })

@@ -2,6 +2,8 @@ const { GraphQLClient, gql } = require('graphql-request')
 const getPort = require('get-port')
 const faker = require('faker')
 const createUser = require('./helpers/createUser')
+const createSubscription = require('./helpers/createSubscription')
+const getJwt = require('./helpers/getJwt')
 
 const SIGN_UP = gql`
   mutation SignUp($username: String!, $email: String!, $password: String!, $realname: String!) {
@@ -18,6 +20,27 @@ const SEND_EMAIL_CONFIRMATION = gql`
     sendEmailConfirmation(input: { email: $email }) {
       email
       sent
+    }
+  }
+`
+
+const CHANGE_PASSWORD = gql`
+  mutation ChangePassword($password: String!, $newPassword: String!) {
+    changePassword(input: { password: $password, newPassword: $newPassword }) {
+      email
+    }
+  }
+`
+
+const ME = gql`
+  {
+    me {
+      id
+      email
+      subscription {
+        id
+        name
+      }
     }
   }
 `
@@ -163,5 +186,115 @@ describe('User extension', () => {
     expect(strapiError.id).toEqual('user.not.found')
     expect(strapiError.message).toContain('User cannot be found with email ')
     expect(mockSendEmailConfirmation).toHaveBeenCalledTimes(0)
+  })
+
+  it('Fails to change password if current password is not valid', async () => {
+    const user = await createUser({
+      password: 'p4ssw0rd',
+    })
+    const jwt = getJwt(user.id)
+    const graphQLClient = new GraphQLClient(endPoint, {
+      headers: {
+        Authorization: `Bearer ${jwt}`,
+      },
+    })
+
+    let error
+    try {
+      await graphQLClient.request(CHANGE_PASSWORD, {
+        password: 'notThePassword',
+        newPassword: 'n3wP4ssw0rd',
+      })
+    } catch (e) {
+      error = e
+    }
+    const strapiError = error.response?.errors[0].extensions.exception.data.message[0].messages[0]
+    expect(strapiError.id).toEqual('current.password.invalid')
+  })
+
+  it('Fails to change password if the new password is not valid', async () => {
+    const user = await createUser({
+      password: 'p4ssw0rd',
+    })
+    const jwt = getJwt(user.id)
+    const graphQLClient = new GraphQLClient(endPoint, {
+      headers: {
+        Authorization: `Bearer ${jwt}`,
+      },
+    })
+
+    let error
+    try {
+      await graphQLClient.request(CHANGE_PASSWORD, {
+        password: 'p4ssw0rd',
+        newPassword: 'badpw',
+      })
+    } catch (e) {
+      error = e
+    }
+    const strapiError = error.response?.errors[0].extensions.exception.data.message[0].messages[0]
+    expect(strapiError.id).toEqual('password.invalid')
+  })
+
+  it('Changes password successfully', async () => {
+    const user = await createUser({
+      password: 'p4ssw0rd',
+    })
+    const jwt = getJwt(user.id)
+    const graphQLClient = new GraphQLClient(endPoint, {
+      headers: {
+        Authorization: `Bearer ${jwt}`,
+      },
+    })
+
+    const newPassword = 'n3wP4ssw0rd'
+    await graphQLClient.request(CHANGE_PASSWORD, {
+      password: 'p4ssw0rd',
+      newPassword,
+    })
+
+    // check password
+    const userWithNewPw = await strapi.plugins['users-permissions'].services.user.fetch({
+      id: user.id,
+    })
+    const validation = await strapi.plugins['users-permissions'].services.user.validatePassword(
+      newPassword,
+      userWithNewPw.password
+    )
+    expect(validation).toBeTruthy()
+  })
+
+  it('Does not send me if not authenticated', async () => {
+    const graphQLClient = new GraphQLClient(endPoint)
+
+    const data = await graphQLClient.request(ME)
+    expect(data.me).toBeNull()
+  })
+
+  it('Send me with subscription if authenticated', async () => {
+    const subscription = await createSubscription()
+    const end = new Date()
+    end.setDate(end.getDate() + 1)
+    const user = await createUser({
+      subscriptionEnd: end,
+      subscriptionActive: true,
+      subscription: subscription.id,
+    })
+    const jwt = getJwt(user.id)
+    const graphQLClient = new GraphQLClient(endPoint, {
+      headers: {
+        Authorization: `Bearer ${jwt}`,
+      },
+    })
+
+    const data = await graphQLClient.request(ME)
+    expect(data.me).toMatchObject({
+      id: user.id.toString(),
+      email: user.email,
+      subscription: {
+        id: subscription.id.toString(),
+        name: subscription.name,
+      },
+    })
   })
 })

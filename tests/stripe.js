@@ -5,7 +5,7 @@ const { GraphQLClient, gql } = require('graphql-request')
 const getPort = require('get-port')
 const stripe = require('stripe')
 
-const FIND_CUSTOMER = gql`
+const CREATE_CHECKOUT = gql`
   mutation Checkout($subscriptionId: ID!) {
     createCheckout(input: { subscriptionId: $subscriptionId }) {
       url
@@ -49,7 +49,7 @@ describe('Stripe extension', () => {
           Authorization: `Bearer ${jwt}`,
         },
       })
-      const data = await graphQLClient.request(FIND_CUSTOMER, {
+      const data = await graphQLClient.request(CREATE_CHECKOUT, {
         subscriptionId: subscription.id,
       })
 
@@ -82,7 +82,7 @@ describe('Stripe extension', () => {
           Authorization: `Bearer ${jwt}`,
         },
       })
-      const data = await graphQLClient.request(FIND_CUSTOMER, {
+      const data = await graphQLClient.request(CREATE_CHECKOUT, {
         subscriptionId: subscription.id,
       })
 
@@ -117,7 +117,7 @@ describe('Stripe extension', () => {
 
       let error
       try {
-        await graphQLClient.request(FIND_CUSTOMER, {
+        await graphQLClient.request(CREATE_CHECKOUT, {
           subscriptionId: subscription.id,
         })
       } catch (e) {
@@ -146,7 +146,7 @@ describe('Stripe extension', () => {
 
       let error
       try {
-        await graphQLClient.request(FIND_CUSTOMER, {
+        await graphQLClient.request(CREATE_CHECKOUT, {
           subscriptionId: subscription.id,
         })
       } catch (e) {
@@ -155,7 +155,7 @@ describe('Stripe extension', () => {
       expect(error.response?.errors[0]?.message).toEqual('Forbidden')
     })
 
-    it('Errors if price is not found on Stripe', async () => {
+    it('Errors if user already has an active subscription', async () => {
       const subscription = await createSubscription()
       const end = new Date()
       end.setDate(end.getDate() + 1)
@@ -172,8 +172,6 @@ describe('Stripe extension', () => {
         },
       } = stripe()
 
-      list.mockResolvedValueOnce({ data: [] })
-
       const graphQLClient = new GraphQLClient(endPoint, {
         headers: {
           Authorization: `Bearer ${jwt}`,
@@ -182,7 +180,7 @@ describe('Stripe extension', () => {
 
       let error
       try {
-        await graphQLClient.request(FIND_CUSTOMER, {
+        await graphQLClient.request(CREATE_CHECKOUT, {
           subscriptionId: subscription.id,
         })
       } catch (e) {
@@ -195,7 +193,45 @@ describe('Stripe extension', () => {
       expect(sessionCreate).not.toHaveBeenCalled()
     })
 
-    it('Errors if user already has an active subscription', async () => {
+    it('Errors if user already has a suspended subscription', async () => {
+      const subscription = await createSubscription()
+      const end = new Date()
+      end.setDate(end.getDate() + 1)
+      const user = await createUser({
+        subscriptionEnd: end,
+        subscriptionActive: false,
+        subscription: subscription.id,
+      })
+      const jwt = getJwt(user.id)
+      const {
+        prices: { list },
+        checkout: {
+          sessions: { create: sessionCreate },
+        },
+      } = stripe()
+
+      const graphQLClient = new GraphQLClient(endPoint, {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+        },
+      })
+
+      let error
+      try {
+        await graphQLClient.request(CREATE_CHECKOUT, {
+          subscriptionId: subscription.id,
+        })
+      } catch (e) {
+        error = e
+      }
+      const strapiError = error.response?.errors[0].extensions.exception.data.message[0].messages[0]
+      expect(strapiError.id).toEqual('Stripe.user.already.subscribed')
+      expect(strapiError.message).toContain('already has an active subscription')
+      expect(list).not.toHaveBeenCalled()
+      expect(sessionCreate).not.toHaveBeenCalled()
+    })
+
+    it('Errors if price is not found on Stripe', async () => {
       const user = await createUser()
       const jwt = getJwt(user.id)
       const subscription = await createSubscription()
@@ -216,7 +252,7 @@ describe('Stripe extension', () => {
 
       let error
       try {
-        await graphQLClient.request(FIND_CUSTOMER, {
+        await graphQLClient.request(CREATE_CHECKOUT, {
           subscriptionId: subscription.id,
         })
       } catch (e) {
