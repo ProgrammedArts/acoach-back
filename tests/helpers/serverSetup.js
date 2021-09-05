@@ -60,4 +60,15 @@ module.exports = async () => {
   await strapi
     .query('permission', 'users-permissions')
     .update({ id: sendEmailConfirmationPermission.id }, { enabled: true })
+
+  // authenticated users can do authenticated users mutations (change password)
+  const [authenticatedPermission] = await strapi.query('permission', 'users-permissions').find({
+    type: 'application',
+    controller: 'authenticated',
+    action: 'isauthenticated',
+    role: 1,
+  })
+  await strapi
+    .query('permission', 'users-permissions')
+    .update({ id: authenticatedPermission.id }, { enabled: true })
 }

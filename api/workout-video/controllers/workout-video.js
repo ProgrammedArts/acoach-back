@@ -12,7 +12,9 @@ module.exports = {
     let entities = []
 
     if (ctx.state.user) {
-      const user = await strapi.plugins['users-permissions'].services.user.fetch(ctx.state.user.id)
+      const user = await strapi.plugins['users-permissions'].services.user.fetch({
+        id: ctx.state.user.id,
+      })
 
       const query = {
         ...ctx.query,
@@ -41,7 +43,9 @@ module.exports = {
     const { id } = ctx.params
 
     if (ctx.state.user) {
-      const user = await strapi.plugins['users-permissions'].services.user.fetch(ctx.state.user.id)
+      const user = await strapi.plugins['users-permissions'].services.user.fetch({
+        id: ctx.state.user.id,
+      })
 
       const query = {
         id,
@@ -62,7 +66,9 @@ module.exports = {
 
   async count(ctx) {
     if (ctx.state.user) {
-      const user = await strapi.plugins['users-permissions'].services.user.fetch(ctx.state.user.id)
+      const user = await strapi.plugins['users-permissions'].services.user.fetch({
+        id: ctx.state.user.id,
+      })
 
       const query = {
         ...ctx.query,

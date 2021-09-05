@@ -53,9 +53,9 @@ module.exports = {
             ])
           }
 
-          const user = await strapi.plugins['users-permissions'].services.user.fetch(
-            context.state.user.id
-          )
+          const user = await strapi.plugins['users-permissions'].services.user.fetch({
+            id: context.state.user.id,
+          })
 
           return user
         },
@@ -131,9 +131,9 @@ module.exports = {
           const { password, newPassword } = options.input
 
           // validate user
-          const user = await strapi.plugins['users-permissions'].services.user.fetch(
-            context.state.user.id
-          )
+          const user = await strapi.plugins['users-permissions'].services.user.fetch({
+            id: context.state.user.id,
+          })
 
           if (!user) {
             throwGraphQLError('user.not.found', 'By some miracle the user does not exist', context)
@@ -148,7 +148,7 @@ module.exports = {
 
           // validate password
           if (
-            !isStrongPassword(options.input.newPassword, {
+            !isStrongPassword(newPassword, {
               minLength: 8,
               minLowercase: 0,
               minUppercase: 0,

@@ -56,78 +56,87 @@ module.exports = {
         description: 'Creates a checkout session',
         resolverOf: 'application::subscription.subscription.create',
         resolver: async (_, { input: { subscriptionId } }, { context }) => {
-          const { user } = context.state
+          const user = await strapi.plugins['users-permissions'].services.user.fetch({
+            id: context.state.user.id,
+          })
+
+          if (
+            user.subscription &&
+            new Date(user.subscriptionEnd).getTime() > new Date().getTime()
+          ) {
+            throwGraphQLError(
+              'Stripe.user.already.subscribed',
+              `User ${user.email} already has an active subscription`,
+              context
+            )
+            return
+          }
 
           const subscription = await strapi.services.subscription.findOne({
             id: subscriptionId,
           })
 
-          if (subscription && user) {
-            // create a stripe customer and update the user with it
-            if (!user.stripeCustomerId) {
-              const customer = await stripe.customers.create({
-                email: user.email,
-                name: user.realname,
-                preferred_locales: ['fr-FR'],
-              })
+          if (!subscription) {
+            throwGraphQLError(
+              'Stripe.subscription.not.found',
+              `Subscription not found (${subscriptionId})`,
+              context
+            )
+            return
+          }
 
-              // add stripe customer id
-              user.stripeCustomerId = customer.id
+          // create a stripe customer and update the user with it
+          if (!user.stripeCustomerId) {
+            const customer = await stripe.customers.create({
+              email: user.email,
+              name: user.realname,
+              preferred_locales: ['fr-FR'],
+            })
 
-              // do not update password
-              delete user.password
+            // add stripe customer id
+            user.stripeCustomerId = customer.id
 
-              // update user
-              await strapi.plugins['users-permissions'].services.user.edit({ id: user.id }, user)
-            }
+            // do not update password
+            delete user.password
 
-            if (hasActiveSubscription(user)) {
-              throwGraphQLError(
-                'Stripe.user.already.subscribed',
-                `User ${user.email} already has an active subscription`,
-                context
-              )
-            }
+            // update user
+            await strapi.plugins['users-permissions'].services.user.edit({ id: user.id }, user)
+          }
 
-            const [price] = (
-              await stripe.prices.list({
-                product: subscription.stripeProductId,
-              })
-            ).data
+          const [price] = (
+            await stripe.prices.list({
+              product: subscription.stripeProductId,
+            })
+          ).data
 
-            if (price) {
-              const session = await stripe.checkout.sessions.create({
-                mode: 'subscription',
-                payment_method_types: ['card'],
-                line_items: [
-                  {
-                    price: price.id,
-                    // For metered billing, do not pass quantity
-                    quantity: 1,
-                  },
-                ],
-                success_url: `${process.env.SITE_HOST}/success?session_id={CHECKOUT_SESSION_ID}`,
-                cancel_url: `${process.env.SITE_HOST}/canceled`,
-                locale: 'fr',
-                customer: user.stripeCustomerId,
-              })
-
-              return {
-                url: session.url,
-              }
-            }
+          if (!price) {
             throwGraphQLError(
               'Stripe.product.not.found',
               `No Stripe product or price for ${subscription.stripeProductId}`,
               context
             )
+            return
           }
 
-          throwGraphQLError(
-            'Stripe.subscription.not.found',
-            `Subscription not found (${subscriptionId})`,
-            context
-          )
+          const session = await stripe.checkout.sessions.create({
+            mode: 'subscription',
+            payment_method_types: ['card'],
+            line_items: [
+              {
+                price: price.id,
+                // For metered billing, do not pass quantity
+                quantity: 1,
+              },
+            ],
+            success_url: `${process.env.SITE_HOST}/success?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${process.env.SITE_HOST}/canceled`,
+            locale: 'fr',
+            customer: user.stripeCustomerId,
+          })
+
+          return {
+            url: session.url,
+          }
         },
       },
     },
